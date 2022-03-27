@@ -13,7 +13,7 @@ This file finds the equivalent historic races and outputs a file with their date
 import pyodbc
 import pandas as pd
 import string
-import pyarrow.feather as feather
+import numpy as np
 
 pf_db_con = pyodbc.connect(
     r'''Driver={SQL Server};
@@ -133,8 +133,10 @@ runners = runners[runners.win_bsp != 0]
 runners = runners[~runners.fin_pos.isna()]
 runners.sort_values(['race_datetime', 'fin_pos'], ascending=[True, True], inplace=True)
 
+runners['handinap_id'] = np.nan
+
 #%% race_datetimes =================================================================
-#handinaps = handinaps[(handinaps.index == 38) & (handinaps.index < 40)]
+#handinaps = handinaps[(handinaps.index == 0) & (handinaps.index < 40)]
 for i in handinaps.index :
     print(handinaps.loc[i, 'race'])
     li = pd.DataFrame(runners[(runners.race_name.str.lower().str.translate(str.maketrans('', '', string.punctuation)).str.contains(handinaps.race[i])) & (runners.crse_name.str.lower() == handinaps.crse_name[i].lower()) & (runners.distance > (handinaps.dist[i]-1)*220) & (runners.distance < (handinaps.dist[i]+1)*220)].race_datetime.drop_duplicates())
@@ -242,6 +244,15 @@ for i in handinaps.index :
     
     print(len(li))
     handinaps.loc[i, 'race_datetimes'] = [[li]]
+    
+    for time in li.race_datetime :
+        runners.loc[runners.race_datetime == time, 'handinap_id'] = i
 
 #%% finish up and save ========================================================
+handinaps.race[29] = 'old borough x'
+runners = runners[~runners.handinap_id.isna()]
+
 handinaps.to_pickle('../data/handinaps.df')
+runners.to_pickle('../data/runners.df')
+
+del handinaps, i, li, pf_db_con, runners, time
