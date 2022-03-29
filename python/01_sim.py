@@ -22,7 +22,7 @@ handinaps = pickle.load(open("../data/handinaps.df", 'rb'))
 runners = pickle.load(open("../data/runners.df", 'rb'))
 bf_place = pd.read_feather('../data/bf_place.ftr')
 
-n_sim = 1000
+n_sim = 100000
 n_partip = 400
 edge_avg = 0
 edge_std = 0
